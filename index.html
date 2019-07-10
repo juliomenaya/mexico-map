@@ -1,0 +1,124 @@
+<!-- 
+  
+  
+  1. Utilizando como herramienta la API de ArcGis desarrollar en JavaScript lo siguiente:
+
+    Generar un mapa de la república mexicana (ajustar el zoom para que incluya solo el territorio nacional)
+
+    Extra: Agregar el web service del volcán Popocatépetl http://rmgir.proyectomesoamerica.org/server/rest/services/Aplicativos/MAPAS_DE_PELIGROS_POPOCATEPET/MapServer
+    
+    Dentro del aplicativo, que el usuario pueda activar dicho servicio con un botón, sírvase del siguiente ejemplo: http://www.atlasnacionalderiesgos.gob.mx/apps/Popocatepetl/
+ -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Prueba CENAPRED</title>
+  <style>
+    html, body{
+      padding: 30px;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  
+  <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/css/main.css">
+  <script src="https://js.arcgis.com/4.11/"></script>  
+</head>
+<body>
+  <button id="recenter">Visualizar el mapa de México</button>
+  <select id="optionsList">
+    <option value="" selected disabled hidden>Zonas de riesgo en caso de...</option>
+    <option value="lahares">Lahares</option>
+    <option value="balisticos">Balísticos</option>    
+    <option value="lavas">Lavas</option>
+    <option value="avalanchas">Avalanchas</option>
+    <option value="evacuacion">Rutas de Evacuación</option>    
+  </select> 
+  <div id="viewDiv" style="width: 90%; height: 100%"></div>  
+  <script>    
+    var mexicoCord = [-99.12766, 22];
+    var view;
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/widgets/BasemapGallery",
+      "esri/layers/FeatureLayer",
+      "esri/request"
+    ], function(Map, MapView, BasemapGallery, Layer, Request) {
+      
+
+      var map = new Map({
+        basemap: "streets-night-vector",        
+      });
+      
+      view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: mexicoCord,
+        zoom: 4        
+      });
+
+      var basemapGallery = new BasemapGallery({
+        view: view,
+        source: {
+          portal: {
+            url: "https://www.arcgis.com",
+            useVectorBasemaps: true  // Load vector tile basemaps
+          }
+        }
+      });
+
+      view.ui.add(basemapGallery, "top-right");
+                            
+      document.getElementById("recenter").addEventListener("click", 
+        function() {
+          view.center = mexicoCord;
+          view.zoom = 4;
+      });
+            
+      
+      document.getElementById("optionsList").addEventListener("change", 
+        function(event) {          
+          var layer = new Layer();
+          // Acorde a la opcion elegida será la url de donde el objeto layer tomará la información para renderizar la capa
+          switch(event.target.value) {
+              case("lahares"): 
+                layer.url = "http://rmgir.proyectomesoamerica.org/server/rest/services/Aplicativos/MAPAS_DE_PELIGROS_POPOCATEPET/MapServer/35?f=json";                
+                addLayer(layer);
+              break;
+              case("balisticos"): 
+                layer.url = "http://rmgir.proyectomesoamerica.org/server/rest/services/Aplicativos/MAPAS_DE_PELIGROS_POPOCATEPET/MapServer/9?f=json";                
+                addLayer(layer);
+              break;
+              case("evacuacion"):
+                layer.url = "http://rmgir.proyectomesoamerica.org/server/rest/services/Aplicativos/MAPAS_DE_PELIGROS_POPOCATEPET/MapServer/5?f=json";                
+                addLayer(layer);
+              break;
+              case("lavas"):
+                layer.url = "http://rmgir.proyectomesoamerica.org/server/rest/services/Aplicativos/MAPAS_DE_PELIGROS_POPOCATEPET/MapServer/39?f=json";                
+                addLayer(layer);
+              break;
+              case("avalanchas"):
+                layer.url = "http://rmgir.proyectomesoamerica.org/server/rest/services/Aplicativos/MAPAS_DE_PELIGROS_POPOCATEPET/MapServer/7?f=json";                
+                addLayer(layer);
+              break;
+              default:                
+              break;
+          }          
+      }); // fin evento change optionList
+
+      function addLayer(layer) {
+        map.layers.removeAll(); 
+        map.add(layer);        
+        layer.when(function(){             
+          view.center = [-98.6237, 18.9500];
+          view.zoom = 10;
+        });
+      }      
+           
+    }); // fin require
+  </script>
+</body>  
+</html>
